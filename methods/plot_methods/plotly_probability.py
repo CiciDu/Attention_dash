@@ -1,39 +1,83 @@
+from methods.plot_methods import plt_simulation, plotly_shared
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
 
-def plot_success_rate_after_adding_to_high_attn_ts(adding_ts_df, high_attn_ts, show_plot=True):
+
+
+def plot_success_rate_of_many_combo_in_plotly(x='ts', y='ranking', color='success_rate', n_combo_to_plot=None, ts_to_plot=None, ts_per_trial=None, highest_or_lowest='highest', show_plot=True):
+    fig = create_base_plot(x, y, color, ts_to_plot)
+    fig = plotly_shared.add_to_base_plot(fig, x, y, ts_to_plot, ts_per_trial, n_combo_to_plot, highest_or_lowest)
+
+    if show_plot:
+        fig.show()
+
+    return fig
+
+
+def create_base_plot(x, y, color, ts_to_plot):
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=ts_to_plot[x],
+            y=ts_to_plot[y],
+            customdata=np.stack((ts_to_plot['high_attn_ts_combo'], ts_to_plot['success_rate'], ts_to_plot['ranking']), axis=-1),
+            mode='markers',
+            marker=dict(
+                size=7,
+                color=ts_to_plot[color],  # set color to column 'success_rate'
+                colorscale='Viridis',  # choose a colorscale
+                showscale=True
+            ),
+            hovertemplate='Ranking of success rate: %{customdata[2]}<br>' + \
+                            'Success rate: %{customdata[1]:.4f}<br>' + \
+                            'high attention time steps: %{customdata[0]}<extra></extra>',
+            showlegend=False,
+        )
+    )
+
+    return fig
+
+
+
+
+
+# ================================================================================================================
+# ================================================================================================================
+# the below is for a different kind of plot.
+def plot_success_rate_after_adding_to_high_attn_ts(adding_ts_result_df, high_attn_ts, show_plot=True):
     # make a bar plot for the success rates
     
-    fig=px.bar(adding_ts_df, x='ts',y='success_rate',
-            color = 'success_rate_ranking',
+    fig=px.bar(adding_ts_result_df, x='ts',y='success_rate',
+            color = 'ranking',
             color_continuous_scale='Viridis_r',
             labels={'ts':'New high attention time step', 
                     'success_rate':'New success rate',
-                    'success_rate_ranking':'Success Rate Ranking'},
+                    'ranking':'Success Rate Ranking'},
             title="New success rate by adding to existing high attention time steps: " + ', '.join(map(str, high_attn_ts)),
-            hover_data={'ts':False, 'success_rate':True, 'success_rate_ranking':False},
-            hover_name='success_rate_ranking',
-            text='success_rate_ranking',
+            hover_data={'ts':False, 'success_rate':True, 'ranking':False},
+            hover_name='ranking',
+            text='ranking',
             )
  
 
     # make x tick labels integers
-    fig.update_xaxes(tickvals=np.arange(1, max(adding_ts_df['ts'])+1))
+    fig.update_xaxes(tickvals=np.arange(1, max(adding_ts_result_df['ts'])+1))
 
     # make the hover text show only 3 decimals. Make it percentage
-    fig.update_traces(hovertemplate='Success Rate: %{y:.3f}')
+    fig.update_traces(hovertemplate='Success Rate: %{y:.4f}')
 
 
     # change the label of the colorbar
     ranking=['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th',
                 '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th']
-    if len(adding_ts_df) <= 20:
-        ranking = ranking[:len(adding_ts_df)]
+    if len(adding_ts_result_df) <= 20:
+        ranking = ranking[:len(adding_ts_result_df)]
     else:
-        ranking = np.arange(1, len(adding_ts_df)+1).tolist()
+        ranking = np.arange(1, len(adding_ts_result_df)+1).tolist()
     fig.update_coloraxes(colorbar=dict(
-        tickvals=np.arange(1, len(adding_ts_df)+1),
+        tickvals=np.arange(1, len(adding_ts_result_df)+1),
         ticktext=ranking,
     ))
 

@@ -1,3 +1,4 @@
+from methods.plot_methods import plt_shared
 import numpy as np
 import pandas as pd
 import itertools
@@ -9,12 +10,33 @@ import plotly.graph_objects as go
 
 import matplotlib.pyplot as plt
 
-def plot_success_rate_after_adding_to_high_attn_ts(adding_ts_df, high_attn_ts, show_plot=True):
+
+def plot_success_rate_of_many_combo(x='ts', y='ranking', hue='success_rate', ts_to_plot=None, ts_per_trial=None, n_combo_to_plot=None, highest_or_lowest='highest', show_plot=True):
+
+    fig, ax = create_base_plot(x, y, hue, ts_to_plot)
+    ax = plt_shared.add_to_base_plot(ax, x, y, ts_to_plot, ts_per_trial, n_combo_to_plot, highest_or_lowest)
+
+    if show_plot:
+        plt.show()
+    return fig, ax
+
+
+
+def create_base_plot(x, y, hue, ts_to_plot):
+    # plot a filled circle for each time step for each combo_id, with color indicating the percentage of trials with observation 1
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.scatterplot(ts_to_plot, x=x, y=y, marker='o', s=70, hue=hue, palette='viridis', legend=False, ax=ax)
+    
+    return fig, ax
+
+
+
+def plot_success_rate_after_adding_to_high_attn_ts(adding_ts_result_df, high_attn_ts, show_plot=True):
     # make a bar plot for the success rates
     fig, ax = plt.subplots()
 
     # Change the bar color and edge color
-    ax.bar(adding_ts_df['ts'], adding_ts_df['success_rate'], color='skyblue', edgecolor='black')
+    ax.bar(adding_ts_result_df['ts'], adding_ts_result_df['success_rate'], color='skyblue', edgecolor='black')
 
     # Set the title and labels with custom font sizes
     ax.set_xlabel("New high attention time step", fontsize=12)
@@ -23,7 +45,7 @@ def plot_success_rate_after_adding_to_high_attn_ts(adding_ts_df, high_attn_ts, s
     plt.subplots_adjust(top=0.9) 
 
     # make the x tick labels span all integers in the range
-    ax.set_xticks(np.arange(1, max(adding_ts_df['ts'])+1))
+    ax.set_xticks(np.arange(1, max(adding_ts_result_df['ts'])+1))
 
     # Change the background color of the plot
     ax.set_facecolor('white')

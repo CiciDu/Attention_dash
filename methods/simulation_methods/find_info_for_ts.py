@@ -25,6 +25,7 @@ def get_ts_for_each_combo_df(ts_obs_1_df, first_ts_obs_1_df, num_trial, ts_per_t
     all_ts_df = pd.DataFrame(np.arange(1, ts_per_trial+1), columns=['ts'])
     ts_for_each_combo_df = ts_for_each_combo_df.merge(all_ts_df, on='ts', how='outer')
     ts_for_each_combo_df = ts_for_each_combo_df.fillna(0)
+    ts_for_each_combo_df.sort_values(by='ranking', ascending=True, inplace=True)
 
     return ts_for_each_combo_df
 
@@ -62,20 +63,19 @@ def get_ts_obs_1_first_df(first_ts_obs_1_df):
 
 
 
-def add_more_info_to_ts_df(ts_for_each_combo_df, combo_id_df, combo_id_df_melted, num_trial):
+def add_more_info_to_ts_df(ts_for_each_combo_df, combo_id_df, all_high_attn_ts_for_each_combo_df, num_trial):
     # If the columns to be added already exist, drop them
-    ts_for_each_combo_df = ts_for_each_combo_df.drop(columns=['combo_success_rate', 'combo_num_trial', 'n_rewarded_trial_for_combo', 'attn_ts_counter'], errors='ignore')
+    ts_for_each_combo_df = ts_for_each_combo_df.drop(columns=['success_rate', 'combo_num_trial', 'n_rewarded_trial_for_combo', 'attn_ts_counter'], errors='ignore')
     # Add columns like combo_success_rate, combo_num_trial, n_rewarded_trial_for_combo (those are combo-wide attributes)
-    ts_for_each_combo_df = ts_for_each_combo_df.merge(combo_id_df[['combo_id', 'combo_success_rate', 'success_rate_ranking', 'n_rewarded_trial_for_combo', 'high_attn_ts_combo']], on='combo_id', how='left')
+    ts_for_each_combo_df = ts_for_each_combo_df.merge(combo_id_df[['combo_id', 'success_rate', 'ranking', 'n_rewarded_trial_for_combo', 'high_attn_ts_combo']], on='combo_id', how='left')
     ts_for_each_combo_df['combo_num_trial'] = num_trial
 
     # Then, let's add combo+ts specific attributes like attn_ts_counter
-    ts_for_each_combo_df = ts_for_each_combo_df.merge(combo_id_df_melted[['combo_id', 'ts', 'attn_ts_counter']], on=['combo_id', 'ts'], how='left')
+    ts_for_each_combo_df = ts_for_each_combo_df.merge(all_high_attn_ts_for_each_combo_df[['combo_id', 'ts', 'attn_ts_counter']], on=['combo_id', 'ts'], how='left')
 
-    # Since ts_for_each_combo_df might contain more rows than combo_id_df_melted (since it includes info of time steps that are not high-attention steps as well), we need to fill NA
+    # Since ts_for_each_combo_df might contain more rows than all_high_attn_ts_for_each_combo_df (since it includes info of time steps that are not high-attention steps as well), we need to fill NA
     values = {"attn_ts_counter": -1}
     ts_for_each_combo_df = ts_for_each_combo_df.fillna(value=values)
-
 
     # Get some other columns
     # Now we want to get "perc_trial_ts_obs_1_any_order", which is the percentage of trial where the current time step has obs=1 no matter if it's the first time step to do so in the trial or no

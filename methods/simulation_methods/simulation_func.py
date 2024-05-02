@@ -21,7 +21,7 @@ def simulate_results_for_one_combo_of_high_attn_time_steps(high_attn_time_steps,
         the number of trial to simulate
     ts_per_trial: int
         the number of time steps in the trial
-    high_attn_ts_per_trial: int
+    high_attn_ts_count: int
         the number of time steps that the subject is attending to the signal
     signal_dur: int
         the duration of the signal (# time steps)
@@ -67,7 +67,7 @@ def simulate_results_for_one_combo_of_high_attn_time_steps(high_attn_time_steps,
 
     result_from_one_combo = {'n_trial_w_obs_1': len(ts_obs_1_df['trial'].unique()),
                       'n_rewarded_trial_for_combo': len(success_df),
-                       'combo_success_rate': success_rate, 
+                       'success_rate': success_rate, 
                        'high_attn_success_rate': high_attn_success_rate, 
                        'low_attn_success_rate': low_attn_success_rate,
                        'ts_for_each_combo_df': ts_for_each_combo_df}
@@ -76,14 +76,14 @@ def simulate_results_for_one_combo_of_high_attn_time_steps(high_attn_time_steps,
 
 
 
-def get_sampled_high_attn_time_steps_combo(ts_per_trial, high_attn_ts_per_trial, max_high_attn_ts_combo=None):
+def get_sampled_high_attn_time_steps_combo(ts_per_trial, high_attn_ts_count, max_high_attn_ts_combo=None):
     '''
-    This function returns all possible combinations of high_attn_ts_per_trial out of ts_per_trial
+    This function returns all possible combinations of high_attn_ts_count out of ts_per_trial
     If the number of possible combinations is too large, randomly sample max_high_attn_ts_combo of them
     '''
 
-    # get all combinations of high_attn_ts_per_trial out of ts_per_trial
-    all_poss_high_attn_time_steps = list(itertools.combinations(range(1, ts_per_trial+1), high_attn_ts_per_trial))
+    # get all combinations of high_attn_ts_count out of ts_per_trial
+    all_poss_high_attn_time_steps = list(itertools.combinations(range(1, ts_per_trial+1), high_attn_ts_count))
     all_poss_high_attn_time_steps = np.array(all_poss_high_attn_time_steps)
     # if the number of possible combinations is too large, randomly sample max_high_attn_ts_combo of them
     if (max_high_attn_ts_combo is not None):

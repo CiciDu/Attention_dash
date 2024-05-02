@@ -1,3 +1,4 @@
+from methods.dash_methods import dash_shared
 import os
 import numpy as np
 import matplotlib
@@ -27,11 +28,14 @@ np.set_printoptions(suppress=True)
 # callback_context: https://dash.plotly.com/advanced-callbacks
 
 
-def put_down_high_level_inputs(input_items, probability_params):
-    input_high_attn_ts = create_input_high_attn_ts(probability_params['high_attn_ts'])
-    children = [input_high_attn_ts]
+def put_down_high_level_inputs(input_items, probability_params, including_high_attn_ts=True):
+    if including_high_attn_ts:
+        input_high_attn_ts = create_input_high_attn_ts(probability_params['high_attn_ts'])
+        children = [input_high_attn_ts]
+    else:
+        children = []
     for item in input_items:
-        children.append(create_input_div(item, probability_params))
+        children.append(dash_shared.create_input_div(item, probability_params))
     return html.Div(children,
                     style={'flex-direction': 'column', 
                             'justify-content': 'space-around', 
@@ -58,47 +62,8 @@ def create_input_high_attn_ts(high_attn_ts):
 
 
 
-def create_input_div(item, probability_params):
-    return html.Div([
-        html.Label(item[1], style={'padding-right': '20px'}),  # Increased right padding
-        dcc.Input(
-            id="input_{}".format(item[0]),
-            type='number',
-            value=probability_params[item[0]],
-            placeholder=probability_params[item[0]],
-            style={'width': '100px'},
-        ),
-    ], style={'display': 'flex', 'align-items': 'center', 'margin': '5px'})  # Added margin
-
-
-
 
 def put_down_calculate_probability_button(id='calculate_probability_button'):
-    return create_button(id, 'Calculate probability')
+    return dash_shared.create_button(id, 'Calculate probability')
 
-
-
-def create_button(id, button_name):
-    return html.Button(button_name, id=id, n_clicks=0, 
-                        style={
-                            'width': '50%', 
-                            'background-color': '#7fa982', 
-                            'padding': '10px 10px 10px 10px', 
-                            'justifyContent': 'center',
-                            'alignItems': 'center',                            
-                            'display': 'flex',
-                            'margin':'auto'
-                        })
-
-
-
-def put_down_main_plot(fig, id='main_plot'):
-    return html.Div([
-                dcc.Graph(
-                    id=id,
-                    figure=fig),
-            ], style={'width': '100%', 
-                      'padding': '30px 0 0 0',
-                      'display': 'flex',
-                    })
 
