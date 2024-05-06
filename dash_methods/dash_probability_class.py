@@ -170,7 +170,6 @@ class DashProbability(probability_class.Probability):
                 self.prepare_to_plot(rank_to_start=self.rank_to_start, rank_to_end=self.rank_to_end)
                 self.plot_probability_results_in_plotly(x=self.x, y=self.y, color=self.color, show_plot=False)
     
-                
                 return self.fig, "Updated successfully"
             except Exception as e:
                 return self.fig, f"An error occurred. No update was made. Error: {e}"
