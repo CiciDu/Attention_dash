@@ -25,7 +25,6 @@ def get_ts_for_each_combo_df(ts_obs_1_df, first_ts_obs_1_df, num_trial, ts_per_t
     all_ts_df = pd.DataFrame(np.arange(1, ts_per_trial+1), columns=['ts'])
     ts_for_each_combo_df = ts_for_each_combo_df.merge(all_ts_df, on='ts', how='outer')
     ts_for_each_combo_df = ts_for_each_combo_df.fillna(0)
-    ts_for_each_combo_df.sort_values(by='ranking', ascending=True, inplace=True)
 
     return ts_for_each_combo_df
 

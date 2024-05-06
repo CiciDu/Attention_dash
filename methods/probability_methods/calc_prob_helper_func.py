@@ -1,4 +1,4 @@
-from methods.simulation_methods import simulation_class, simulation_func, find_info_for_ts, find_info_for_combo
+from methods.shared import methods_shared
 import itertools
 import seaborn as sns
 import os
@@ -13,17 +13,6 @@ from matplotlib import rc
 from numpy import random
 
 
-
-def get_all_high_attn_ts_for_each_combo_df(combo_id_df, high_attn_ts_count):
-    # get the percentage of each time step to be the first time step to have obs=1
-    all_high_attn_ts_for_each_combo_df = combo_id_df.melt(id_vars=['combo_id', 'success_rate', 'ranking', 'high_attn_ts_combo'], 
-                                        value_vars=['attn_time_' + str(i) for i in range(high_attn_ts_count)], 
-                                        var_name='attn_ts_counter', value_name='ts')
-    # change the values in all_high_attn_ts_for_each_combo_df['attn_ts_counter'] by extracting the number at the end of the string
-    all_high_attn_ts_for_each_combo_df['attn_ts_counter'] = all_high_attn_ts_for_each_combo_df['attn_ts_counter'].str.extract('(\d+)').astype(int)
-    all_high_attn_ts_for_each_combo_df.sort_values(by='ranking', ascending=True, inplace=True)
-
-    return all_high_attn_ts_for_each_combo_df
 
 
 def get_all_ts_for_each_combo_df(combo_id_df, all_high_attn_ts_for_each_combo_df, ts_per_trial):
@@ -47,31 +36,31 @@ def calc_prob_for_all_combo_given_high_attn_ts_count(high_attn_ts_count,
 ):
         
 
-        all_high_attn_time_steps_combo = simulation_func.get_sampled_high_attn_time_steps_combo(ts_per_trial, high_attn_ts_count, max_high_attn_ts_combo=None)
+    all_high_attn_time_steps_combo = methods_shared.get_sampled_high_attn_time_steps_combo(ts_per_trial, high_attn_ts_count, max_high_attn_ts_combo=None)
 
 
-        combo_id_df = pd.DataFrame(columns=['combo_id', 'success_rate'] +
-                                          ['attn_time_' + str(i) for i in range(high_attn_ts_count)])
+    combo_id_df = pd.DataFrame(columns=['combo_id', 'success_rate'] +
+                                        ['attn_time_' + str(i) for i in range(high_attn_ts_count)])
 
-        for i in range(all_high_attn_time_steps_combo.shape[0]):
-            # sample the set of time instances where the agent pays attention
-            if i % 100 == 0:
-                print("Calculate probability for attention combo {} out of {}".format(i, all_high_attn_time_steps_combo.shape[0]))
-            high_attn_time_steps = all_high_attn_time_steps_combo[i, :]
+    for i in range(all_high_attn_time_steps_combo.shape[0]):
+        # sample the set of time instances where the agent pays attention
+        if i % 100 == 0:
+            print("Calculate probability for attention combo {} out of {}".format(i, all_high_attn_time_steps_combo.shape[0]))
+        high_attn_time_steps = all_high_attn_time_steps_combo[i, :]
 
 
-            success_rate_of_one_combo = calc_prob_given_high_attn_ts_positions(high_attn_ts=high_attn_time_steps, ts_per_trial=ts_per_trial,
-                                                                               signal_dur=signal_dur, p_obs_1_high_attn_sig_pres=p_obs_1_high_attn_sig_pres,
-                                                                            p_obs_1_high_attn_sig_abs=p_obs_1_high_attn_sig_abs)
+        success_rate_of_one_combo = calc_prob_given_high_attn_ts_positions(high_attn_ts=high_attn_time_steps, ts_per_trial=ts_per_trial,
+                                                                            signal_dur=signal_dur, p_obs_1_high_attn_sig_pres=p_obs_1_high_attn_sig_pres,
+                                                                        p_obs_1_high_attn_sig_abs=p_obs_1_high_attn_sig_abs)
 
-            combo_id_df.loc[i, 'combo_id'] = i
-            combo_id_df.loc[i, 'success_rate'] = success_rate_of_one_combo
-            combo_id_df.loc[i, ['attn_time_' + str(i) for i in range(high_attn_ts_count)]] = high_attn_time_steps      
-        
-        combo_id_df['ranking'] = combo_id_df['success_rate'].rank(ascending=False, method='first').astype(int)
-        combo_id_df['high_attn_ts_combo'] = combo_id_df[['attn_time_' + str(i) for i in range(high_attn_ts_count)]].values.tolist()
-        combo_id_df.sort_values(by='ranking', ascending=True, inplace=True)
-        return combo_id_df
+        combo_id_df.loc[i, 'combo_id'] = i
+        combo_id_df.loc[i, 'success_rate'] = success_rate_of_one_combo
+        combo_id_df.loc[i, ['attn_time_' + str(i) for i in range(high_attn_ts_count)]] = high_attn_time_steps      
+    
+    combo_id_df['ranking'] = combo_id_df['success_rate'].rank(ascending=False, method='first').astype(int)
+    combo_id_df['high_attn_ts_combo'] = combo_id_df[['attn_time_' + str(i) for i in range(high_attn_ts_count)]].values.tolist()
+    combo_id_df.sort_values(by='ranking', ascending=True, inplace=True)
+    return combo_id_df
 
 
 

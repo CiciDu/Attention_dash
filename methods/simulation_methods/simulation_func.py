@@ -52,7 +52,7 @@ def simulate_results_for_one_combo_of_high_attn_time_steps(high_attn_time_steps,
     ts_for_each_combo_df = find_info_for_ts.get_ts_for_each_combo_df(ts_obs_1_df, first_ts_obs_1_df, num_trial, ts_per_trial)
 
     # take out the rows where the time step is within the signal time steps
-    success_df = first_ts_obs_1_df[first_ts_obs_1_df['condition'] >= 102]
+    success_df = first_ts_obs_1_df[first_ts_obs_1_df['condition'] >= 102].copy()
     if len(success_df) > 0:
         # calculate the percentage of successes among all trial
         success_rate = len(success_df)/num_trial
@@ -73,31 +73,6 @@ def simulate_results_for_one_combo_of_high_attn_time_steps(high_attn_time_steps,
                        'ts_for_each_combo_df': ts_for_each_combo_df}
 
     return result_from_one_combo
-
-
-
-def get_sampled_high_attn_time_steps_combo(ts_per_trial, high_attn_ts_count, max_high_attn_ts_combo=None):
-    '''
-    This function returns all possible combinations of high_attn_ts_count out of ts_per_trial
-    If the number of possible combinations is too large, randomly sample max_high_attn_ts_combo of them
-    '''
-
-    # get all combinations of high_attn_ts_count out of ts_per_trial
-    all_poss_high_attn_time_steps = list(itertools.combinations(range(1, ts_per_trial+1), high_attn_ts_count))
-    all_poss_high_attn_time_steps = np.array(all_poss_high_attn_time_steps)
-    # if the number of possible combinations is too large, randomly sample max_high_attn_ts_combo of them
-    if (max_high_attn_ts_combo is not None):
-        if len(all_poss_high_attn_time_steps) > max_high_attn_ts_combo:
-            sampled_indices = random.choice(len(all_poss_high_attn_time_steps), max_high_attn_ts_combo, replace=False)
-            sampled_high_attn_time_steps_combo = all_poss_high_attn_time_steps[sampled_indices]
-            print("Sampled {} out of {} possible combinations".format(max_high_attn_ts_combo, len(all_poss_high_attn_time_steps)))
-        else:
-            sampled_high_attn_time_steps_combo = all_poss_high_attn_time_steps
-            print("Using all {} possible combinations".format(len(all_poss_high_attn_time_steps)))
-    else:
-        sampled_high_attn_time_steps_combo = all_poss_high_attn_time_steps
-        print("Using all {} possible combinations".format(len(all_poss_high_attn_time_steps)))
-    return sampled_high_attn_time_steps_combo
 
 
 

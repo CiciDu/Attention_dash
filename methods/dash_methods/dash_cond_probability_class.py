@@ -1,6 +1,7 @@
 from methods.probability_methods import calc_prob_helper_func, probability_class
-from methods.dash_methods import dash_prob_helper_func, dash_shared
+from methods.dash_methods import dash_prob_helper_func
 from methods.plot_methods import plotly_probability
+from methods.shared import dash_shared
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -28,8 +29,8 @@ class DashCondProbability():
 
         self.input_items = [['ts_per_trial', 'Time steps per trial', 1, 10000],
                             ['signal_dur', 'Signal duration', 1, 10000],
-                            ['p_obs_1_high_attn_sig_pres', 'cp. of obs = 1 w signal w attention', 0, 1],
-                            ['p_obs_1_high_attn_sig_abs', 'cp. of obs = 1 w/o signal w attention', 0, 1]]
+                            ['p_obs_1_high_attn_sig_pres', 'prob. of obs = 1 w signal w attention', 0, 1],
+                            ['p_obs_1_high_attn_sig_abs', 'prob. of obs = 1 w/o signal w attention', 0, 1]]
         self.input_names = [item[0] for item in self.input_items]
         self.input_displayed_names = [item[1] for item in self.input_items]
         self.min_values = [item[2] for item in self.input_items]

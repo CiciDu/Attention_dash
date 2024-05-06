@@ -1,16 +1,17 @@
-from methods.plot_methods import plt_simulation, plt_shared, plotly_shared
+from methods.plot_methods import plt_simulation
+from methods.shared import plotly_shared, plt_shared
 import plotly.graph_objects as go
 import plotly.express as px
 
 
 
 def plot_simulation_results_in_plotly(x='ts', y='ranking', hue_var=None, hue_denominator='n_trial_ts_obs_1_first', hue_numerator='n_rewarded_trial_ts_obs_1_first', 
-                            ts_to_plot=None, ts_per_trial=None, n_combo_to_plot=None, highest_or_lowest='highest', show_plot=True):
+                            ts_to_plot=None, ts_per_trial=None, rank_to_start=None, rank_to_end=15, show_plot=True):
     label_dict = plt_shared.generate_label_dict()
     hue_values, hue_label = plt_simulation.determine_variable_for_hue(hue_var, hue_denominator, hue_numerator, label_dict, ts_to_plot)
     
     fig = create_base_plot(x, y, hue_values,  hue_label, ts_to_plot)
-    fig = plotly_shared.add_to_base_plot(fig, x, y, ts_to_plot, ts_per_trial, n_combo_to_plot, highest_or_lowest)
+    fig = plotly_shared.add_to_base_plot(fig, x, y, ts_to_plot, ts_per_trial, rank_to_start, rank_to_end)
     fig = plotly_shared.label_colorbar(fig, hue_label)
 
     if show_plot:
@@ -46,7 +47,9 @@ def create_base_plot(x, y, hue_values, hue_label, ts_to_plot, color_scale='virid
                     'high attention time steps: %{customdata[0]}'
 
     fig.update_traces(hovertemplate=hovertemplate, showlegend=False)
-    #fig.update_layout(hovermode="y unified")
+
+    num_rows = len(ts_to_plot[y].unique())
+    fig.update_layout(height=max(500, 300 + 25 * num_rows))
 
 
     return fig

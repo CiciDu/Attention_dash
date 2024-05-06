@@ -1,5 +1,6 @@
 from methods.probability_methods import calc_prob_helper_func, probability_class
-from methods.dash_methods import dash_prob_helper_func, dash_simul_helper_func, dash_shared
+from methods.dash_methods import dash_prob_helper_func, dash_simul_helper_func
+from methods.shared import dash_shared
 from methods.plot_methods import plotly_probability
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,19 +23,22 @@ class DashProbability(probability_class.Probability):
 
 
 
+
     def prepare_to_use_dash(self,                                             
                             high_attn_ts_count=3,
                             ts_per_trial=9,
                             signal_dur = 3,
                             p_obs_1_high_attn_sig_pres = 0.8,
                             p_obs_1_high_attn_sig_abs = 0.2,
-                            n_combo_to_plot=10, 
-                            highest_or_lowest='highest'):
+                            rank_to_start=0, 
+                            rank_to_end=15):
         self.x = 'ts'
         self.y = 'ranking'
         self.color = 'success_rate'
-        self.n_combo_to_plot = n_combo_to_plot
-        self.highest_or_lowest = highest_or_lowest
+        self.rank_to_start = rank_to_start
+        self.rank_to_end = rank_to_end
+        self.default_rank_to_start = rank_to_start
+        self.default_rank_to_end = rank_to_end
         self.probability_params = {'high_attn_ts_count': high_attn_ts_count,
                                 'ts_per_trial': ts_per_trial,
                                 'signal_dur': signal_dur,
@@ -43,6 +47,7 @@ class DashProbability(probability_class.Probability):
         self.probability_params_default = self.probability_params.copy()
         self.calculate_probability_anew_and_plot()
     
+        #self.shared.inspect_rank_to_start_and_rank_to_end(rank_to_start, rank_to_end)
 
 
     def prepare_dash_for_main_plots_layout(self, 
@@ -53,8 +58,8 @@ class DashProbability(probability_class.Probability):
                         dash_shared.create_error_massage_display(),
                         dash_prob_helper_func.put_down_high_level_inputs(self.input_items, self.probability_params, including_high_attn_ts=False),
                         dash_prob_helper_func.put_down_calculate_probability_button(),
-                        dash_shared.put_down_y_axis_variable(self.y, self.n_combo_to_plot, self.highest_or_lowest),
-                        #dash_shared.put_down_refresh_plot_button(),
+                        dash_shared.put_down_y_axis_variable(self.y, self.n_combo, self.rank_to_start, self.rank_to_end),
+                        dash_shared.put_down_refresh_plot_button(),
                         dash_shared.put_down_main_plot(self.fig),
                         
                         ])
@@ -86,8 +91,8 @@ class DashProbability(probability_class.Probability):
         self.input_items = [['high_attn_ts_count', 'High attention time steps', 0, 'ts_per_trial'],
                             ['ts_per_trial', 'Time steps per trial', 1, 10000],
                             ['signal_dur', 'Signal duration', 1, 10000],
-                            ['p_obs_1_high_attn_sig_pres', 'cp. of obs = 1 w signal w attention', 0, 1],
-                            ['p_obs_1_high_attn_sig_abs', 'cp. of obs = 1 w/o signal w attention', 0, 1]]
+                            ['p_obs_1_high_attn_sig_pres', 'prob. of obs = 1 w signal w attention', 0, 1],
+                            ['p_obs_1_high_attn_sig_abs', 'prob. of obs = 1 w/o signal w attention', 0, 1]]
         self.input_names = [item[0] for item in self.input_items]
         self.input_displayed_names = [item[1] for item in self.input_items]
         self.min_values = [item[2] for item in self.input_items]
@@ -98,16 +103,16 @@ class DashProbability(probability_class.Probability):
 
     def calculate_probability_anew_and_plot(self):
         self.calc_prob_for_all_combo_given_high_attn_ts_count(**self.probability_params)
-        self.prepare_to_plot(n_combo_to_plot=self.n_combo_to_plot, highest_or_lowest=self.highest_or_lowest)
+        self.prepare_to_plot(rank_to_start=self.rank_to_start, rank_to_end=self.rank_to_end)
         self.plot_probability_results_in_plotly(x=self.x, y=self.y, color=self.color, show_plot=False)
         return
-
 
 
     def make_function_to_calc_prob_for_all_combo_given_high_attn_ts_count(self, app):
         @app.callback(
             Output("main_plot", "figure", allow_duplicate=True),
             Output("error_message", "children", allow_duplicate=True),
+            Output("n_combo", "children"),
             Input("calculate_probability_button", "n_clicks"),
             [State("input_{}".format(item[0]), "value") for item in self.input_items],
             prevent_initial_call=True,
@@ -136,11 +141,12 @@ class DashProbability(probability_class.Probability):
                 print("Running probability with the following parameters:")
                 print(self.probability_params)
                 self.calculate_probability_anew_and_plot()
+                n_combo_text = f"Display Ranks (out of {self.n_combo}):"
 
-
-                return self.fig, "Updated successfully"
+                return self.fig, "Updated successfully", n_combo_text
             except Exception as e:
-                return self.fig, f"An error occurred. No update was made. Error: {e}"
+                n_combo_text = f"Display Ranks (out of {self.n_combo}):"
+                return self.fig, f"An error occurred. No update was made. Error: {e}", n_combo_text
         return
 
 
@@ -150,27 +156,20 @@ class DashProbability(probability_class.Probability):
         @app.callback(
             Output("main_plot", "figure", allow_duplicate=True),
             Output("error_message", "children", allow_duplicate=True),
-            Input("y_var", "value"),
-            Input("n_combo_to_plot", "value"),
-            Input("highest_or_lowest", "value"),
+            Input('refresh_plot_button', 'n_clicks'),
+            State("y_var", "value"),
+            State("rank_to_start", "value"),
+            State("rank_to_end", "value"),
             prevent_initial_call=True
         )
-        def refresh_plot(y_var, n_combo_to_plot, highest_or_lowest):
+        def refresh_plot(n_clicks, y_var, rank_to_start, rank_to_end):
             try:
-                self.y = 'ranking' if y_var == 'ranking' else 'success_rate'
-                self.n_combo_to_plot = n_combo_to_plot
-                if n_combo_to_plot is None:
-                    self.n_combo_to_plot = self.default_n_combo_to_plot
-                elif n_combo_to_plot > 1:
-                    self.n_combo_to_plot = n_combo_to_plot
-                else:
-                    raise PreventUpdate("The number of combo to plot should be greater than 1.")
-                self.highest_or_lowest = highest_or_lowest
-                self.prepare_to_plot(n_combo_to_plot=self.n_combo_to_plot, highest_or_lowest=self.highest_or_lowest)
+                self.y = y_var
+                self.rank_to_start, self.rank_to_end = dash_shared.inspect_rank_to_start_and_rank_to_end(self, self.n_combo, rank_to_start, rank_to_end, self.default_rank_to_start, self.default_rank_to_end)
+
+                self.prepare_to_plot(rank_to_start=self.rank_to_start, rank_to_end=self.rank_to_end)
                 self.plot_probability_results_in_plotly(x=self.x, y=self.y, color=self.color, show_plot=False)
-            #     return self.fig
-            # except Exception as e:
-            #     return self.fig        
+    
                 
                 return self.fig, "Updated successfully"
             except Exception as e:

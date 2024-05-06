@@ -10,14 +10,14 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
 
-def add_to_base_plot(ax, x, y, ts_to_plot, ts_per_trial, n_combo_to_plot, highest_or_lowest):
+def add_to_base_plot(ax, x, y, ts_to_plot, ts_per_trial, rank_to_start, rank_to_end):
     ax = add_high_attention_points(ax, x, y, ts_to_plot)
     ax = add_dashed_horizontal_lines(ax, y, ts_per_trial, ts_to_plot)
     ax = update_axis(ax, y, ts_to_plot, ts_per_trial)
     label_dict = generate_label_dict()
-    ax = add_labels_and_title(ax, x, y, label_dict, n_combo_to_plot, highest_or_lowest)
+    ax = add_labels_and_title(ax, x, y, label_dict, rank_to_start, rank_to_end)
     if y == 'ranking':
-        ax = label_with_success_rate(ax, ts_per_trial, ts_to_plot, highest_or_lowest)
+        ax = label_with_success_rate(ax, ts_per_trial, ts_to_plot)
     return ax
 
 
@@ -41,7 +41,7 @@ def add_dashed_horizontal_lines(ax, y, ts_per_trial, ts_to_plot):
         ax.hlines(y_value, 1, ts_per_trial, linestyles='dashed', colors='grey', alpha=0.3)
     return ax
 
-def label_with_success_rate(ax, ts_per_trial, ts_to_plot, highest_or_lowest):
+def label_with_success_rate(ax, ts_per_trial, ts_to_plot):
     ts_to_plot = ts_to_plot.copy()
     ts_to_plot = ts_to_plot[['ranking', 'success_rate']].drop_duplicates()
     for i in range(ts_to_plot.shape[0]):
@@ -50,21 +50,21 @@ def label_with_success_rate(ax, ts_per_trial, ts_to_plot, highest_or_lowest):
                 str(round(ts_to_plot.iloc[i]['success_rate'], 3)), 
                 color='black', fontsize=10, ha='left', va='center')
     # label the above as success rate, with the position taking into consideration whether the ax is inverted
-    if highest_or_lowest == 'lowest':
+    if rank_to_end == 'lowest':
         ax.text(ts_per_trial, ts_to_plot['ranking'].max()+0.5, 'Success rate', color='black', fontsize=12, ha='left', va='center')
     else:
         ax.text(ts_per_trial, ts_to_plot['ranking'].min()-0.5, 'Success rate', color='black', fontsize=12, ha='left', va='center')
     return ax
 
 
-def add_labels_and_title(ax, x, y, label_dict, n_combo_to_plot, highest_or_lowest):
+def add_labels_and_title(ax, x, y, label_dict, rank_to_start, rank_to_end):
     ax.set_xlabel(label_dict[x])
     ax.set_ylabel(label_dict[y])
-    if highest_or_lowest == 'highest':
-        ax.set_title('Top {} high-attention timestep combinations'.format(n_combo_to_plot), fontsize=15)
+    if rank_to_end == 'highest':
+        ax.set_title('Top {} high-attention timestep combinations'.format(rank_to_start), fontsize=15)
         ax.invert_yaxis()
     else:
-        ax.set_title('Bottom {} high-attention timestep combinations'.format(n_combo_to_plot), fontsize=15)
+        ax.set_title('Bottom {} high-attention timestep combinations'.format(rank_to_start), fontsize=15)
     return ax
 
 

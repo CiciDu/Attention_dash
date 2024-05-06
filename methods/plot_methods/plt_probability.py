@@ -1,4 +1,4 @@
-from methods.plot_methods import plt_shared
+from methods.shared import plt_shared
 import numpy as np
 import pandas as pd
 import itertools
@@ -11,10 +11,10 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
 
-def plot_success_rate_of_many_combo(x='ts', y='ranking', hue='success_rate', ts_to_plot=None, ts_per_trial=None, n_combo_to_plot=None, highest_or_lowest='highest', show_plot=True):
+def plot_success_rate_of_many_combo(x='ts', y='ranking', hue='success_rate', ts_to_plot=None, ts_per_trial=None, rank_to_start=None, rank_to_end=15, show_plot=True):
 
     fig, ax = create_base_plot(x, y, hue, ts_to_plot)
-    ax = plt_shared.add_to_base_plot(ax, x, y, ts_to_plot, ts_per_trial, n_combo_to_plot, highest_or_lowest)
+    ax = plt_shared.add_to_base_plot(ax, x, y, ts_to_plot, ts_per_trial, rank_to_start, rank_to_end)
 
     if show_plot:
         plt.show()

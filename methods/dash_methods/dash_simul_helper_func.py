@@ -1,4 +1,4 @@
-from methods.dash_methods import dash_shared
+from methods.shared import dash_shared
 import os
 import numpy as np
 import matplotlib

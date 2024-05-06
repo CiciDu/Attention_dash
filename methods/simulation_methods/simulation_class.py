@@ -1,5 +1,6 @@
 from methods.simulation_methods import simulation_func, find_info_for_ts, find_info_for_combo
 from methods.plot_methods import plt_simulation, plotly_simulation
+from methods.shared import shared_class, methods_shared
 import numpy as np
 import pandas as pd
 import itertools
@@ -9,12 +10,11 @@ from numpy import random
 import plotly.graph_objects as go
 
 
-class Simulation:
+class Simulation(shared_class.SharedClass):
 
 
     def __init__(self) -> None:
-        pass
-
+        super().__init__()
 
 
     def run_simulation(self,
@@ -35,7 +35,6 @@ class Simulation:
                                         p_obs_1_low_attn_sig_pres=p_obs_1_low_attn_sig_pres,
                                         p_obs_1_low_attn_sig_abs=p_obs_1_low_attn_sig_abs)
         self.process_important_df()
-        #return self.combo_id_df, self.all_high_attn_ts_for_each_combo_df, self.all_ts_for_each_combo_df
 
 
 
@@ -43,7 +42,7 @@ class Simulation:
         self.ts_per_trial = ts_per_trial
         self.high_attn_ts_count = high_attn_ts_count
         self.max_high_attn_ts_combo = max_high_attn_ts_combo
-        self.sampled_high_attn_time_steps_combo = simulation_func.get_sampled_high_attn_time_steps_combo(ts_per_trial, high_attn_ts_count, max_high_attn_ts_combo=max_high_attn_ts_combo)
+        self.sampled_high_attn_time_steps_combo = methods_shared.get_sampled_high_attn_time_steps_combo(ts_per_trial, high_attn_ts_count, max_high_attn_ts_combo=max_high_attn_ts_combo)
 
 
 
@@ -77,7 +76,7 @@ class Simulation:
             for metrics in dict_of_all_results.keys():
                 dict_of_all_results[metrics].append(result_from_one_combo[metrics])
 
-            ts_for_each_combo_df = result_from_one_combo['ts_for_each_combo_df']
+            ts_for_each_combo_df = result_from_one_combo['ts_for_each_combo_df'].copy()
             ts_for_each_combo_df['combo_id'] = i
             if i == 0:
                 all_ts_for_each_combo_df = ts_for_each_combo_df
@@ -91,34 +90,14 @@ class Simulation:
 
 
     def process_important_df(self):
-        # Note: the difference between all_high_attn_ts_for_each_combo_df and all_ts_for_each_combo_df is that the former contains only the information of high-attn ts for each combo, but the latter contains all time steps for each combo
-        self.all_high_attn_ts_for_each_combo_df = self.combo_id_df.melt(id_vars=['combo_id', 'success_rate', 'ranking', 'high_attn_success_rate', 'low_attn_success_rate', 'n_rewarded_trial_for_combo', 'high_attn_ts_combo'], 
-                                            value_vars=['attn_time_' + str(i) for i in range(self.high_attn_ts_count)], 
-                                            var_name='attn_ts_counter', value_name='ts')
-        # change the values in all_high_attn_ts_for_each_combo_df['attn_ts_counter'] by extracting the number at the end of the string
-        self.all_high_attn_ts_for_each_combo_df['attn_ts_counter'] = self.all_high_attn_ts_for_each_combo_df['attn_ts_counter'].str.extract('(\d+)').astype(int)
+        self.all_high_attn_ts_for_each_combo_df = methods_shared.get_all_high_attn_ts_for_each_combo_df(self.combo_id_df, self.high_attn_ts_count, id_vars=['combo_id', 'success_rate', 'ranking', 'high_attn_success_rate', 'low_attn_success_rate', 'n_rewarded_trial_for_combo', 'high_attn_ts_combo'])
         self.all_ts_for_each_combo_df = find_info_for_ts.add_more_info_to_ts_df(self.all_ts_for_each_combo_df, self.combo_id_df, self.all_high_attn_ts_for_each_combo_df, self.num_trial)
 
-        #return self.combo_id_df, self.all_high_attn_ts_for_each_combo_df, self.all_ts_for_each_combo_df
-    
 
-    def prepare_to_plot(self, n_combo_to_plot=10, highest_or_lowest='highest'):
-        self.n_combo_to_plot = n_combo_to_plot
-        self.highest_or_lowest = highest_or_lowest
-        # Make a plot such that the x-axis shows the attention time steps, and the y-axis shows the success rate
-        if highest_or_lowest == 'highest':
-            self.combo_id_df_to_plot = self.combo_id_df.head(n_combo_to_plot)
-        else:
-            self.combo_id_df_to_plot = self.combo_id_df.tail(n_combo_to_plot)
-        
-        self.chosen_combo_id = self.combo_id_df_to_plot['combo_id'].unique()
-        self.high_attn_ts_df_to_plot = self.all_high_attn_ts_for_each_combo_df[self.all_high_attn_ts_for_each_combo_df['combo_id'].isin(self.chosen_combo_id)]
-        # Find the corresponding rows in ts_for_each_combo_df
-        self.ts_to_plot = self.all_ts_for_each_combo_df[self.all_ts_for_each_combo_df['combo_id'].isin(self.chosen_combo_id)]
-        
-        #return self.combo_id_df_to_plot, self.high_attn_ts_df_to_plot, self.ts_to_plot
-    
 
+
+    def prepare_to_plot(self, rank_to_start=1, rank_to_end=15):
+        super().prepare_to_plot(rank_to_start, rank_to_end)
 
 
 
@@ -130,8 +109,8 @@ class Simulation:
         self.hue_numerator = hue_numerator
 
         self.fig, self.ax = plt_simulation.plot_simulation_results(x=x, y=y, hue_var=hue_var, hue_denominator=hue_denominator, hue_numerator=hue_numerator,
-                                    ts_to_plot=self.ts_to_plot, ts_per_trial=self.ts_per_trial, n_combo_to_plot=self.n_combo_to_plot, 
-                                    highest_or_lowest=self.highest_or_lowest, show_plot=show_plot)
+                                    ts_to_plot=self.ts_to_plot, ts_per_trial=self.ts_per_trial, rank_to_start=self.rank_to_start, 
+                                    rank_to_end=self.rank_to_end, show_plot=show_plot)
 
 
 
@@ -144,7 +123,7 @@ class Simulation:
 
         self.fig = plotly_simulation.plot_simulation_results_in_plotly(x=x, y=y, hue_var=hue_var, hue_denominator=hue_denominator, hue_numerator=hue_numerator,
                                     ts_to_plot=self.ts_to_plot, ts_per_trial=self.ts_per_trial, 
-                                    n_combo_to_plot=self.n_combo_to_plot, highest_or_lowest=self.highest_or_lowest, show_plot=show_plot)
+                                    rank_to_start=self.rank_to_start, rank_to_end=self.rank_to_end, show_plot=show_plot)
 
 
 

@@ -1,6 +1,6 @@
-from methods.simulation_methods import simulation_class, simulation_func, find_info_for_ts, find_info_for_combo
 from methods.probability_methods import calc_prob_helper_func
 from methods.plot_methods import plt_probability, plotly_probability
+from methods.shared import shared_class, methods_shared
 import numpy as np
 import pandas as pd
 import itertools
@@ -10,11 +10,11 @@ from numpy import random
 import plotly.graph_objects as go
 
 
-class Probability:
+class Probability(shared_class.SharedClass):
 
 
     def __init__(self) -> None:
-        pass
+        super().__init__()
 
 
 
@@ -36,24 +36,13 @@ class Probability:
 
 
     def process_important_df(self):
-        self.all_high_attn_ts_for_each_combo_df = calc_prob_helper_func.get_all_high_attn_ts_for_each_combo_df(self.combo_id_df,self.high_attn_ts_count)
+        self.n_combo = len(self.combo_id_df)
+        self.all_high_attn_ts_for_each_combo_df = methods_shared.get_all_high_attn_ts_for_each_combo_df(self.combo_id_df,self.high_attn_ts_count)
         self.all_ts_for_each_combo_df = calc_prob_helper_func.get_all_ts_for_each_combo_df(self.combo_id_df, self.all_high_attn_ts_for_each_combo_df, self.ts_per_trial)
 
     
-    def prepare_to_plot(self, n_combo_to_plot=10, highest_or_lowest='highest'):
-        self.n_combo_to_plot = n_combo_to_plot
-        self.highest_or_lowest = highest_or_lowest
-        # Make a plot such that the x-axis shows the attention time steps, and the y-axis shows the success rate
-        self.combo_id_df.sort_values(by='ranking', ascending=True, inplace=True)
-        if highest_or_lowest == 'highest':
-            self.combo_id_df_to_plot = self.combo_id_df.head(n_combo_to_plot)
-        else:
-            self.combo_id_df_to_plot = self.combo_id_df.tail(n_combo_to_plot)
-        
-        self.chosen_combo_id = self.combo_id_df_to_plot['combo_id'].unique()
-        self.high_attn_ts_df_to_plot = self.all_high_attn_ts_for_each_combo_df[self.all_high_attn_ts_for_each_combo_df['combo_id'].isin(self.chosen_combo_id)]
-        self.ts_to_plot = self.all_ts_for_each_combo_df[self.all_ts_for_each_combo_df['combo_id'].isin(self.chosen_combo_id)]
-
+    def prepare_to_plot(self, rank_to_start=1, rank_to_end=15):
+        super().prepare_to_plot(rank_to_start, rank_to_end)
 
 
     def plot_probability_results(self, x='ts', y='ranking', hue='success_rate', show_plot=True):
@@ -61,7 +50,7 @@ class Probability:
         self.y = y
         self.hue = hue
         self.fig, self.ax = plt_probability.plot_success_rate_of_many_combo(x=x, y=y, hue=hue, ts_to_plot=self.ts_to_plot, ts_per_trial=self.ts_per_trial, 
-                                        n_combo_to_plot=self.n_combo_to_plot, highest_or_lowest=self.highest_or_lowest, show_plot=show_plot)
+                                        rank_to_start=self.rank_to_start, rank_to_end=self.rank_to_end, show_plot=show_plot)
 
 
 
@@ -71,7 +60,7 @@ class Probability:
         self.y = y
         self.color = color
         self.fig = plotly_probability.plot_success_rate_of_many_combo_in_plotly(x=x, y=y, color=color, ts_to_plot=self.ts_to_plot, ts_per_trial=self.ts_per_trial, 
-                                        n_combo_to_plot=self.n_combo_to_plot, highest_or_lowest=self.highest_or_lowest, show_plot=show_plot)
+                                        rank_to_start=self.rank_to_start, rank_to_end=self.rank_to_end, show_plot=show_plot)
 
 
 

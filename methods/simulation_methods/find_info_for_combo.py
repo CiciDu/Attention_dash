@@ -17,10 +17,9 @@ def get_combo_id_df(sampled_high_attn_time_steps_combo, dict_of_all_results, num
     for column in dict_of_all_results.keys():
         combo_id_df[column] = dict_of_all_results[column]
 
-    combo_id_df.sort_values(by='ranking', ascending=True, inplace=True)
-    combo_id_df['ranking'] = np.arange(combo_id_df.shape[0])+1
+    combo_id_df['ranking'] = combo_id_df['success_rate'].rank(ascending=False, method='first').astype(int)
     combo_id_df.reset_index(drop=True, inplace=True)
 
     combo_id_df['high_attn_ts_combo'] = combo_id_df[['attn_time_' + str(i) for i in range(high_attn_ts_count)]].values.tolist()
-    combo_id_df.sort_values(by='ranking', inplace=True)
+    combo_id_df.sort_values(by='ranking', ascending=True, inplace=True)
     return combo_id_df

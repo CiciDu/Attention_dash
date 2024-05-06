@@ -1,13 +1,13 @@
-from methods.plot_methods import plt_simulation, plotly_shared
+from methods.shared import plotly_shared
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
 
 
 
-def plot_success_rate_of_many_combo_in_plotly(x='ts', y='ranking', color='success_rate', n_combo_to_plot=None, ts_to_plot=None, ts_per_trial=None, highest_or_lowest='highest', show_plot=True):
+def plot_success_rate_of_many_combo_in_plotly(x='ts', y='ranking', color='success_rate', rank_to_start=1, ts_to_plot=None, ts_per_trial=None, rank_to_end=15, show_plot=True):
     fig = create_base_plot(x, y, color, ts_to_plot)
-    fig = plotly_shared.add_to_base_plot(fig, x, y, ts_to_plot, ts_per_trial, n_combo_to_plot, highest_or_lowest)
+    fig = plotly_shared.add_to_base_plot(fig, x, y, ts_to_plot, ts_per_trial, rank_to_start, rank_to_end)
 
     if show_plot:
         fig.show()
@@ -16,7 +16,21 @@ def plot_success_rate_of_many_combo_in_plotly(x='ts', y='ranking', color='succes
 
 
 def create_base_plot(x, y, color, ts_to_plot):
-    fig = go.Figure()
+    num_rows = len(ts_to_plot[y].unique())
+    fig = go.Figure(layout=go.Layout(autosize=False,
+                                     height=max(500, 200 + 30 * num_rows),
+                                     margin=dict(pad=10,
+                                                # l=50,  # left margin
+                                                # r=50,  # right margin
+                                                # b=100,  # bottom margin
+                                                # t=20
+                                                )  # top margin,
+                                    ) 
+                    ) 
+
+ 
+
+
 
     fig.add_trace(
         go.Scatter(
@@ -36,6 +50,7 @@ def create_base_plot(x, y, color, ts_to_plot):
             showlegend=False,
         )
     )
+
 
     return fig
 
@@ -58,7 +73,8 @@ def plot_success_rate_after_adding_to_high_attn_ts(adding_ts_result_df, high_att
             title="New success rate by adding to existing high attention time steps: " + ', '.join(map(str, high_attn_ts)),
             hover_data={'ts':False, 'success_rate':True, 'ranking':False},
             hover_name='ranking',
-            text='ranking',
+            custom_data = ['ranking'],
+            #text='ranking',
             )
  
 
@@ -66,7 +82,8 @@ def plot_success_rate_after_adding_to_high_attn_ts(adding_ts_result_df, high_att
     fig.update_xaxes(tickvals=np.arange(1, max(adding_ts_result_df['ts'])+1))
 
     # make the hover text show only 3 decimals. Make it percentage
-    fig.update_traces(hovertemplate='Success Rate: %{y:.4f}')
+    fig.update_traces(hovertemplate='Success Rate: %{y:.4f}<br>'+
+                      'Ranking: %{customdata[0]}<extra></extra>')
 
 
     # change the label of the colorbar
