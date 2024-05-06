@@ -1,3 +1,4 @@
+from tkinter import N
 from methods.shared import plotly_shared
 import plotly.graph_objects as go
 import plotly.express as px
@@ -9,6 +10,7 @@ import pandas as pd
 def plot_success_rate_of_many_combo_in_plotly(x='ts', y='ranking', color='success_rate', rank_to_start=1, ts_to_plot=None, ts_per_trial=None, rank_to_end=15, show_plot=True):
     fig = create_base_plot(x, y, color, ts_to_plot)
     fig = plotly_shared.add_to_base_plot(fig, x, y, ts_to_plot, ts_per_trial, rank_to_start, rank_to_end)
+    fig = plotly_shared.label_colorbar(fig, 'Success Rate')
 
     if show_plot:
         fig.show()
@@ -37,7 +39,7 @@ def create_base_plot(x, y, color, ts_to_plot):
         go.Scatter(
             x=ts_to_plot[x],
             y=ts_to_plot[y],
-            customdata=np.stack((ts_to_plot['high_attn_ts_combo'], ts_to_plot['success_rate'], ts_to_plot['ranking']), axis=-1),
+            #customdata=np.stack((ts_to_plot['success_rate'], ts_to_plot['ranking']), axis=-1),
             mode='markers',
             marker=dict(
                 size=7,
@@ -45,14 +47,12 @@ def create_base_plot(x, y, color, ts_to_plot):
                 colorscale='Viridis',  # choose a colorscale
                 showscale=True
             ),
-            hovertemplate='Ranking of success rate: %{customdata[2]}<br>' + \
-                            'Success rate: %{customdata[1]:.4f}<br>' + \
-                            'high attention time steps: %{customdata[0]}<extra></extra>',
+            hoverinfo=None,
+            # hovertemplate='Ranking of success rate: %{customdata[1]}<br>' + \
+            #                 'Success rate: %{customdata[0]:.4f}<extra></extra>',
             showlegend=False,
         )
     )
-
-
     return fig
 
 

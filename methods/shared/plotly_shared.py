@@ -36,7 +36,7 @@ def add_dashed_horizontal_lines(fig, y, ts_per_trial, ts_to_plot):
 
 
 def label_with_success_rate(fig, ts_per_trial, ts_to_plot):
-    ts_to_plot = ts_to_plot[['ranking', 'success_rate']].copy()
+    ts_to_plot = ts_to_plot[['ranking', 'success_rate']].drop_duplicates()
     # since only the ranking is shown, label each horizontal line with the success rate
     for i in range(ts_to_plot.shape[0]):
         fig.add_annotation(x=ts_per_trial+0.7, y=ts_to_plot.iloc[i]['ranking'], text=str(round(ts_to_plot.iloc[i]['success_rate'], 3)), showarrow=False)

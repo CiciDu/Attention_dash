@@ -220,18 +220,21 @@ def put_down_y_axis_variable(y, n_combo, rank_to_start=0, rank_to_end=10):
 def inspect_rank_to_start_and_rank_to_end(self, n_combo, rank_to_start, rank_to_end, default_rank_to_start, default_rank_to_end):
     if rank_to_start is None:
         rank_to_start = default_rank_to_start
-    if rank_to_start == 0:
-        rank_to_start = 1
-    elif (rank_to_start >= 1) and (rank_to_start <= n_combo):
-        rank_to_start = rank_to_start
-
-    else:
-        raise PreventUpdate(f"The number of row to start should be between 1 and {n_combo}.")
-
     if rank_to_end is None:
         rank_to_end = default_rank_to_end
-    elif (rank_to_end > rank_to_start) and (rank_to_end <= n_combo):
-        rank_to_end = rank_to_end
+
+    if rank_to_start < 1:
+        rank_to_start = 1
+    elif rank_to_start > n_combo:
+        rank_to_start = n_combo
     else:
-        raise PreventUpdate(f"The number of row to end should be between {rank_to_start} and {n_combo}.")
+        rank_to_start = rank_to_start
+
+    if rank_to_end < rank_to_start:
+        rank_to_end = rank_to_start
+    elif rank_to_end > n_combo:
+        rank_to_end = n_combo
+    # else:
+    #     raise PreventUpdate(f"The number of row to end should be between {rank_to_start} and {n_combo}.")
+    
     return rank_to_start, rank_to_end
